@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Test') {
+            steps {
+                sh '''
+                    python3 -m pip install -r requirements.txt
+                    python3 -m pytest -q
+                '''
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'docker build -t ai-platform-lab:latest .'
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo 'Pipeline failed; investigate logs.'
+        }
+    }
+}
