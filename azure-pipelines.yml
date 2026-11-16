@@ -1,0 +1,36 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: Validate
+    displayName: 'Test AI Application'
+    jobs:
+      - job: UnitTests
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.12'
+
+          - script: |
+              python -m pip install -r requirements.txt
+              python -m pytest -q
+            displayName: 'Run Python Tests'
+
+  - stage: Build
+    displayName: 'Build Container Image'
+    dependsOn: Validate
+    condition: succeeded()
+    jobs:
+      - job: DockerBuild
+        steps:
+          - task: Docker@2
+            displayName: 'Build Docker Image'
+            inputs:
+              command: 'build'
+              Dockerfile: 'Dockerfile'
+              repository: 'ai-platform-lab'
+              tags: |
+                $(Build.BuildId)
